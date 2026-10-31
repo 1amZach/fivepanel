@@ -1,0 +1,12 @@
+{
+    "staff": {},
+    "tiers": ["support", "mod", "admin", "owner"],
+    "permissions": {},
+    "map": {
+        "image": "",
+        "bounds": [-4140, -4300, 4860, 8300]
+    },
+    "weatherTypes": ["CLEAR", "EXTRASUNNY", "CLOUDS", "OVERCAST", "RAIN", "THUNDER", "FOGGY", "SMOG", "SNOW", "XMAS", "HALLOWEEN"],
+    "weatherCommand": "weather {type}",
+    "timeCommand": "time {hour} {minute}"
+}
