@@ -2,7 +2,7 @@
 
 A web admin panel for your FiveM server. Staff log in with Discord and get a live player list, a map, player profiles with every action one click away, bans, the anticheat feed, reports, the server console, resources and server controls.
 
-It runs inside your server as a normal resource, so there's nothing else to host. It works on its own, and does a lot more next to [fivecord](https://github.com/1amZach/fivecord), [warden](https://github.com/1amZach/warden) and [fivelog](https://github.com/1amZach/fivelog).
+It runs inside your server as a normal resource, so there's nothing else to host. It works on its own, and does a lot more next to [fivecord](https://github.com/1amZach/fivecord), [warden](https://github.com/1amZach/warden), [fivelog](https://github.com/1amZach/fivelog) and [fiveupdate](https://github.com/1amZach/fiveupdate).
 
 ![Dashboard](docs/dashboard.png)
 
@@ -17,7 +17,7 @@ It runs inside your server as a normal resource, so there's nothing else to host
 - **Logs:** kills, damage, chat, money, items, spawned vehicles and joins from fivelog. Filter by kind, day, text or player. New lines show up as they happen.
 - **Reports:** in-game `/report`s as a chat. Claim, reply (it shows in the player's chat) and close.
 - **Console:** the live server console, and a box to run commands.
-- **Resources:** start, stop and restart any resource, and pick up new ones.
+- **Resources:** start, stop and restart any resource, and pick up new ones. With fiveupdate, see which have a new release on GitHub, preview exactly which files an update changes, update with your config edits kept, and undo it.
 - **Server:** lock the server for maintenance, schedule or cancel a restart, set the weather and time, send an announcement, kick everyone.
 
 ![Player profile](docs/player.png)
@@ -34,7 +34,9 @@ It runs inside your server as a normal resource, so there's nothing else to host
 | Reports, server lock, scheduled restarts | | yes | |
 | Weather, time, announcements | yes | | |
 
-The Logs page and players' recent activity need fivelog.
+The Logs page and players' recent activity need fivelog. Updates on the Resources page need fiveupdate.
+
+![Updating a resource](docs/update.png)
 
 Staff levels come from fivecord when it's running, so the panel and the Discord commands always agree on who can do what, `Config.permissions` included. Every action taken in the panel is logged to fivecord's staff channel with the staff member's name.
 
@@ -79,7 +81,7 @@ add_principal identifier.discord:123456789012345678 group.admin
 add_ace group.admin fivepanel.admin allow
 ```
 
-What each level can do follows the same defaults as fivecord. The Logs page is mod and up by default; change it with `"logs"` in `permissions`. Change them with `permissions` in `config.json`, using the same names fivecord uses (`"kick": "admin"`, `"server restart": "owner"`).
+What each level can do follows the same defaults as fivecord. The Logs page is mod and up by default; change it with `"logs"` in `permissions`. Anyone who can see Resources sees which updates are out, but running them is owner only, since it writes files on the server; change it with `"resource update"`. Change them with `permissions` in `config.json`, using the same names fivecord uses (`"kick": "admin"`, `"server restart": "owner"`).
 
 ### HTTPS
 

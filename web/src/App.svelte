@@ -68,6 +68,7 @@
                     {#if has('fivecord')}<span class="badge teal">fivecord</span>{/if}
                     {#if has('warden')}<span class="badge brand">warden</span>{/if}
                     {#if has('fivelog')}<span class="badge">fivelog</span>{/if}
+                    {#if has('fiveupdate')}<span class="badge">fiveupdate</span>{/if}
                 </div>
             </div>
         </aside>

@@ -20,6 +20,7 @@ const defaults: Record<string, string | null> = {
     'resource refresh': 'admin', console: 'owner',
     // panel only, fivecord doesn't have these
     logs: 'mod',
+    'resource update': 'owner',
 };
 
 export interface Access {
@@ -68,7 +69,7 @@ export async function of(staff: Staff): Promise<Access> {
             const a = await fivecord.call('access', [], staff);
             const needs = { ...a.needs };
             const index = indexIn(a.tiers);
-            for (const key of ['logs']) needs[key] ??= index(config.permissions[key] ?? defaults[key]);
+            for (const key of ['logs', 'resource update']) needs[key] ??= index(config.permissions[key] ?? defaults[key]);
             access = { tier: a.tier, tierName: a.tierName, tiers: a.tiers, needs, via: 'fivecord' };
         } catch {
             access = local(staff.id);

@@ -3,6 +3,7 @@ import { can, of, type Access } from './access';
 import { cfx, config, resource } from './config';
 import * as fivecord from './fivecord';
 import * as fivelog from './fivelog';
+import * as fiveupdate from './fiveupdate';
 import { Refused, type Staff } from './fivecord';
 import * as state from './state';
 
@@ -62,7 +63,7 @@ function screenshot(src: number): Promise<string> {
 route('GET', '/api/me', undefined, (c) => ({
     staff: c.staff,
     access: c.access,
-    features: { fivecord: fivecord.running(), warden: wardenRunning(), screenshots: screenshots(), fivelog: fivelog.running() },
+    features: { fivecord: fivecord.running(), warden: wardenRunning(), screenshots: screenshots(), fivelog: fivelog.running(), fiveupdate: fiveupdate.running() },
     map: config.map,
 }));
 
@@ -268,6 +269,31 @@ route('POST', '/api/resources/:name/:action', undefined, (c) => {
     state.did(label(c.staff), `${action === 'stop' ? 'stopped' : action === 'start' ? 'started' : 'restarted'} ${name}`);
     fivecord.log('resources', `${action} ${name}`, `From the panel by **${label(c.staff)}**`);
     return { text: `${name}: ${GetResourceState(name)}` };
+});
+
+// ------------------------------------------------------------------ updates
+
+route('GET', '/api/updates', 'resource list', () => fiveupdate.call('list'));
+route('POST', '/api/updates/check', 'resource update', () => fiveupdate.call('check'));
+route('GET', '/api/updates/:name', 'resource update', (c) => fiveupdate.call('preview', decodeURIComponent(c.params[0]!)));
+
+route('POST', '/api/updates/:name/:action', 'resource update', async (c) => {
+    const name = decodeURIComponent(c.params[0]!);
+    const action = c.params[1]!;
+    if (action === 'apply') {
+        const u = await fiveupdate.call('update', name);
+        state.did(label(c.staff), `updated ${name} from ${u.from} to ${u.to}`);
+        fivecord.log('resources', `Updated ${name}`, `${u.from} → ${u.to}, from the panel by **${label(c.staff)}**`);
+        return { ...u, text: u.restarted ? `${name} updated to ${u.to} and restarted.` : `${name} updated to ${u.to}. Restart it to load the new version.` };
+    }
+    if (action === 'undo') {
+        const u = await fiveupdate.call('undo', name);
+        state.did(label(c.staff), `put ${name} back to ${u.to}`);
+        fivecord.log('resources', `Undid the update of ${name}`, `Back to ${u.to}, from the panel by **${label(c.staff)}**`);
+        const kept = u.skipped.length ? ` ${u.skipped.length} file${u.skipped.length > 1 ? 's' : ''} changed since were left alone.` : '';
+        return { ...u, text: `${name} is back to ${u.to}. Restart it to load it.${kept}` };
+    }
+    throw new Refused('Unknown action.');
 });
 
 // ------------------------------------------------------------------ server

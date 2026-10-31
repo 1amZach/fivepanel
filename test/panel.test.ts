@@ -198,6 +198,37 @@ describe('http', () => {
         states.fivelog = 'missing';
     });
 
+    test('updates go to fiveupdate, owners only for changes', async () => {
+        assert.equal((await call('/api/updates', owner)).status, 400, 'needs fiveupdate');
+        states.fiveupdate = 'started';
+        const asked: unknown[][] = [];
+        globalThis.on('fiveupdate:api', (id: number, action: string, ...args: unknown[]) => {
+            asked.push([action, ...args]);
+            const reply: Record<string, unknown> = {
+                list: { checked: 1, resources: [{ name: 'warden', version: '1.0.2', latest: '1.0.3' }] },
+                preview: { name: 'warden', from: '1.0.2', to: '1.0.3', files: [{ path: 'config.lua', action: 'merge' }] },
+                update: { from: '1.0.2', to: '1.0.3', restarted: false },
+                undo: { from: '1.0.3', to: '1.0.2', skipped: ['a.lua'] },
+            };
+            if (args[0] === 'broken') fire('fiveupdate:api:done', undefined, id, false, 'broken has no releases');
+            else fire('fiveupdate:api:done', undefined, id, true, reply[action]);
+        });
+        assert.equal((await call('/api/updates', support)).json.resources[0].latest, '1.0.3', 'support can see them');
+        assert.equal((await call('/api/updates/warden', support)).status, 403);
+        assert.equal((await call('/api/updates/warden/apply', support, 'POST', {})).status, 403);
+        assert.equal((await call('/api/updates/warden', owner)).json.files[0].action, 'merge');
+        const done = await call('/api/updates/warden/apply', owner, 'POST', {});
+        assert.match(done.json.text, /updated to 1\.0\.3\. Restart it/);
+        const back = await call('/api/updates/warden/undo', owner, 'POST', {});
+        assert.match(back.json.text, /back to 1\.0\.2.*1 file changed since/);
+        const bad = await call('/api/updates/broken', owner);
+        assert.deepEqual([bad.status, bad.json.error], [400, 'broken has no releases']);
+        assert.equal((await call('/api/updates/warden/delete', owner, 'POST', {})).status, 400);
+        assert.deepEqual(asked.map((a) => a[0]), ['list', 'preview', 'update', 'undo', 'preview']);
+        assert.equal((await call('/api/me', owner)).json.features.fiveupdate, true);
+        states.fiveupdate = 'missing';
+    });
+
     test('in-game staff activity shows up', async () => {
         fire('fivepanel:activity', undefined, 'Kira (in game)', 'brought Pat to them');
         const list = (await call('/api/activity', owner)).json;
