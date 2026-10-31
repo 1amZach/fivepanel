@@ -3,6 +3,7 @@
     import { act, api, enc } from '../lib/api';
     import { ask } from '../lib/dialog.svelte';
     import { ago, date, duration, money } from '../lib/format';
+    import LogTable from '../lib/LogTable.svelte';
     import { live } from '../lib/live.svelte';
     import { go, href } from '../lib/router.svelte';
     import { can, has } from '../lib/session.svelte';
@@ -23,6 +24,13 @@
         }
     }
     onMount(load);
+
+    let logs = $state<any[] | null>(null);
+    $effect(() => {
+        const license = p?.license ?? p?.online?.license;
+        if (!license || !has('fivelog') || !can('logs') || logs) return;
+        api(`/api/logs?player=${enc(license)}&limit=25`).then((r) => (logs = r)).catch(() => (logs = []));
+    });
 
     const online = $derived(Boolean(p?.online));
     const full = $derived(has('fivecord'));
@@ -222,6 +230,13 @@
         {/if}
     {/if}
 
+    {#if logs}
+        <div class="card timeline">
+            <h2>Recent activity <a class="btn small" href={href('logs', p.license ?? p.online?.license)}>All logs</a></h2>
+            <LogTable rows={logs} empty="Nothing logged for them yet." />
+        </div>
+    {/if}
+
     {#if online && can('where')}
         <div class="row small faint where">
             Position {p.online.pos?.map((n: number) => n.toFixed(1)).join(', ')} · <a href={href('map')} onclick={() => go('map')}>show on map</a>
@@ -239,6 +254,7 @@
     .shot img { width: 100%; border-radius: 8px; display: block; }
     .shot { margin-bottom: 16px; }
     .ids { margin-top: 16px; }
+    .timeline { margin-top: 16px; }
     .ids code { font-size: 12px; }
     .where { margin-top: 14px; }
     .where a { text-decoration: underline; }

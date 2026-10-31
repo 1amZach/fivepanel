@@ -3,7 +3,7 @@ import { api, whenLoggedOut } from './api';
 export interface Me {
     staff: { id: string; name: string; avatar?: string };
     access: { tier: number; tierName: string | null; tiers: string[]; needs: Record<string, number>; via: string };
-    features: { fivecord: boolean; warden: boolean; screenshots: boolean };
+    features: { fivecord: boolean; warden: boolean; screenshots: boolean; fivelog: boolean };
     map: { image: string; bounds: [number, number, number, number] };
 }
 

@@ -122,6 +122,10 @@ on('warden:punished', (src: number, action: string, kind: string, detail: string
     publish('detection', { ...d, image: undefined, hasImage: Boolean(image) });
 });
 
+// ------------------------------------------------------------------ logs
+
+on('fivelog:entry', (e: unknown) => publish('log', e));
+
 // ------------------------------------------------------------------ activity
 
 export interface Activity {

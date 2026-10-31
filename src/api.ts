@@ -2,6 +2,7 @@ import type { IncomingMessage } from 'node:http';
 import { can, of, type Access } from './access';
 import { cfx, config, resource } from './config';
 import * as fivecord from './fivecord';
+import * as fivelog from './fivelog';
 import { Refused, type Staff } from './fivecord';
 import * as state from './state';
 
@@ -61,7 +62,7 @@ function screenshot(src: number): Promise<string> {
 route('GET', '/api/me', undefined, (c) => ({
     staff: c.staff,
     access: c.access,
-    features: { fivecord: fivecord.running(), warden: wardenRunning(), screenshots: screenshots() },
+    features: { fivecord: fivecord.running(), warden: wardenRunning(), screenshots: screenshots(), fivelog: fivelog.running() },
     map: config.map,
 }));
 
@@ -195,6 +196,22 @@ route('POST', '/api/detections/:id/dismiss', 'bans', (c) => {
     d.dismissed = true;
     state.did(label(c.staff), `dismissed a ${d.kind} detection on ${d.name}`);
     return { text: 'Dismissed.' };
+});
+
+// ------------------------------------------------------------------ logs
+
+route('GET', '/api/logs', 'logs', (c) => {
+    const n = (k: string) => (c.query.get(k) ? Number(c.query.get(k)) : undefined);
+    const kinds = (c.query.get('kind') ?? '').split(',').filter(Boolean);
+    return fivelog.query({
+        kind: kinds.length ? kinds : undefined,
+        player: c.query.get('player') || undefined,
+        q: c.query.get('q')?.slice(0, 100) || undefined,
+        before: n('before'),
+        from: n('from'),
+        to: n('to'),
+        limit: Math.min(n('limit') ?? 100, 200),
+    });
 });
 
 // ------------------------------------------------------------------ console

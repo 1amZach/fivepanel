@@ -182,6 +182,22 @@ describe('http', () => {
         assert.equal((await call('/api/server/lock', owner, 'POST', { args: [] })).status, 400);
     });
 
+    test('logs search goes to fivelog, mods and up', async () => {
+        assert.equal((await call('/api/logs', owner)).status, 400, 'needs fivelog');
+        states.fivelog = 'started';
+        let asked: any;
+        globalThis.on('fivelog:query', (id: number, filter: any) => {
+            asked = filter;
+            fire('fivelog:query:done', undefined, id, true, [{ id: 1, kind: 'deaths', text: 'Al killed Bob' }]);
+        });
+        const r = await call('/api/logs?kind=deaths,damage&player=license:bob&q=killed&limit=999', owner);
+        assert.equal(r.json[0].text, 'Al killed Bob');
+        assert.deepEqual(asked, { kind: ['deaths', 'damage'], player: 'license:bob', q: 'killed', before: undefined, from: undefined, to: undefined, limit: 200 });
+        assert.equal((await call('/api/logs', support)).status, 403);
+        assert.equal((await call('/api/me', owner)).json.features.fivelog, true);
+        states.fivelog = 'missing';
+    });
+
     test('in-game staff activity shows up', async () => {
         fire('fivepanel:activity', undefined, 'Kira (in game)', 'brought Pat to them');
         const list = (await call('/api/activity', owner)).json;

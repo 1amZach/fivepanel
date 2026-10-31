@@ -9,6 +9,7 @@
     import Console from './pages/Console.svelte';
     import Dashboard from './pages/Dashboard.svelte';
     import Login from './pages/Login.svelte';
+    import Logs from './pages/Logs.svelte';
     import MapPage from './pages/Map.svelte';
     import Player from './pages/Player.svelte';
     import Players from './pages/Players.svelte';
@@ -30,6 +31,7 @@
             { page: 'map', label: 'Live map', show: can('where') },
             { page: 'bans', label: 'Bans', show: can('bans') && (has('fivecord') || has('warden')) },
             { page: 'anticheat', label: 'Anticheat', show: can('bans') && has('warden') },
+            { page: 'logs', label: 'Logs', show: can('logs') && has('fivelog') },
             { page: 'reports', label: 'Reports', show: can('players') && has('fivecord') },
             { page: 'console', label: 'Console', show: can('console') },
             { page: 'resources', label: 'Resources', show: can('resource list') },
@@ -65,6 +67,7 @@
                 <div class="row small faint">
                     {#if has('fivecord')}<span class="badge teal">fivecord</span>{/if}
                     {#if has('warden')}<span class="badge brand">warden</span>{/if}
+                    {#if has('fivelog')}<span class="badge">fivelog</span>{/if}
                 </div>
             </div>
         </aside>
@@ -93,6 +96,7 @@
                 {:else if route.page === 'map'}<MapPage />
                 {:else if route.page === 'bans'}<Bans />
                 {:else if route.page === 'anticheat'}<Anticheat />
+                {:else if route.page === 'logs'}{#key route.args[0]}<Logs player={route.args[0] ?? ''} />{/key}
                 {:else if route.page === 'reports'}<Reports />
                 {:else if route.page === 'console'}<Console />
                 {:else if route.page === 'resources'}<Resources />

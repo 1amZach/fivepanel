@@ -39,3 +39,17 @@ export const labels: Record<string, string> = {
     godmode: 'Godmode', damageModifier: 'Damage boost', spectate: 'Spectate', invisible: 'Invisible',
     noclip: 'Noclip', superJump: 'Super jump', freecam: 'Freecam', vision: 'Vision', blockedCommand: 'Menu command',
 };
+
+export const logKinds: Record<string, { label: string; color: string }> = {
+    joins: { label: 'Joins', color: 'teal' },
+    chat: { label: 'Chat', color: '' },
+    deaths: { label: 'Deaths', color: 'red' },
+    damage: { label: 'Damage', color: 'amber' },
+    money: { label: 'Money', color: 'green' },
+    items: { label: 'Items', color: 'brand' },
+    vehicles: { label: 'Vehicles', color: 'teal' },
+    resources: { label: 'Resources', color: '' },
+};
+
+// the profile link for someone in a log line
+export const playerRef = (license?: string | null) => (license ? `#${license.replace(/^license:/, '')}` : '');

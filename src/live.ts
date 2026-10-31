@@ -1,5 +1,5 @@
 // Live updates over a WebSocket: player positions, server stats, console
-// output and new detections, each only to staff allowed to see them.
+// output, new detections and log lines, each only to staff allowed to see them.
 
 import type { IncomingMessage, Server } from 'node:http';
 import type { Duplex } from 'node:stream';
@@ -24,6 +24,7 @@ const channelKey: Record<string, string> = {
     activity: 'players',
     console: 'console',
     detection: 'bans',
+    log: 'logs',
 };
 
 function send(c: Client, channel: string, data: unknown) {

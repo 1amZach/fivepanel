@@ -2,7 +2,7 @@
 
 A web admin panel for your FiveM server. Staff log in with Discord and get a live player list, a map, player profiles with every action one click away, bans, the anticheat feed, reports, the server console, resources and server controls.
 
-It runs inside your server as a normal resource, so there's nothing else to host. It works on its own, and does a lot more next to [fivecord](https://github.com/1amZach/fivecord) and [warden](https://github.com/1amZach/warden).
+It runs inside your server as a normal resource, so there's nothing else to host. It works on its own, and does a lot more next to [fivecord](https://github.com/1amZach/fivecord), [warden](https://github.com/1amZach/warden) and [fivelog](https://github.com/1amZach/fivelog).
 
 ![Dashboard](docs/dashboard.png)
 
@@ -10,10 +10,11 @@ It runs inside your server as a normal resource, so there's nothing else to host
 
 - **Dashboard:** players online, server tick time, uptime, a player count chart, joins and leaves, recent detections and what staff have done, here or in game with [fiveadmin](https://github.com/1amZach/fiveadmin).
 - **Players:** everyone online with ping and playtime, plus a search across everyone who has ever joined.
-- **Player profile:** account, playtime, character, job, money, vehicles, warnings, staff notes, ban history and identifiers. From here you can message, warn, revive, heal, teleport, freeze, screenshot, kill, kick or ban them.
+- **Player profile:** account, playtime, character, job, money, vehicles, warnings, staff notes, ban history, identifiers and recent activity. From here you can message, warn, revive, heal, teleport, freeze, screenshot, kill, kick or ban them.
 - **Live map:** every player's position, updated every 2 seconds. Scroll to zoom, drag to move, click a dot to open the player.
 - **Bans:** search, see who banned whom and why, lift a ban.
 - **Anticheat:** warden's detections as they happen, with screenshots for kicks and bans, and a one-click ban or dismiss.
+- **Logs:** kills, damage, chat, money, items, spawned vehicles and joins from fivelog. Filter by kind, day, text or player. New lines show up as they happen.
 - **Reports:** in-game `/report`s as a chat. Claim, reply (it shows in the player's chat) and close.
 - **Console:** the live server console, and a box to run commands.
 - **Resources:** start, stop and restart any resource, and pick up new ones.
@@ -32,6 +33,8 @@ It runs inside your server as a normal resource, so there's nothing else to host
 | Anticheat feed | | | yes |
 | Reports, server lock, scheduled restarts | | yes | |
 | Weather, time, announcements | yes | | |
+
+The Logs page and players' recent activity need fivelog.
 
 Staff levels come from fivecord when it's running, so the panel and the Discord commands always agree on who can do what, `Config.permissions` included. Every action taken in the panel is logged to fivecord's staff channel with the staff member's name.
 
@@ -76,7 +79,7 @@ add_principal identifier.discord:123456789012345678 group.admin
 add_ace group.admin fivepanel.admin allow
 ```
 
-What each level can do follows the same defaults as fivecord. Change them with `permissions` in `config.json`, using the same names fivecord uses (`"kick": "admin"`, `"server restart": "owner"`).
+What each level can do follows the same defaults as fivecord. The Logs page is mod and up by default; change it with `"logs"` in `permissions`. Change them with `permissions` in `config.json`, using the same names fivecord uses (`"kick": "admin"`, `"server restart": "owner"`).
 
 ### HTTPS
 

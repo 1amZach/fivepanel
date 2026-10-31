@@ -18,6 +18,8 @@ const defaults: Record<string, string | null> = {
     announce: 'mod',
     'resource list': 'support', 'resource start': 'admin', 'resource stop': 'admin', 'resource restart': 'admin',
     'resource refresh': 'admin', console: 'owner',
+    // panel only, fivecord doesn't have these
+    logs: 'mod',
 };
 
 export interface Access {
@@ -28,13 +30,15 @@ export interface Access {
     via: 'fivecord' | 'panel';
 }
 
+const indexIn = (tiers: string[]) => (name: string | null | undefined) => {
+    if (name == null || name === 'everyone') return -1;
+    const i = tiers.indexOf(name);
+    return i >= 0 ? i : tiers.length - 1;
+};
+
 function local(id: string): Access {
     const tiers = config.tiers;
-    const index = (name: string | null | undefined) => {
-        if (name == null || name === 'everyone') return -1;
-        const i = tiers.indexOf(name);
-        return i >= 0 ? i : tiers.length - 1;
-    };
+    const index = indexIn(tiers);
 
     let tier = config.staff[id] ? index(config.staff[id]) : -1;
     for (let i = tiers.length - 1; i > tier; i--) {
@@ -62,7 +66,10 @@ export async function of(staff: Staff): Promise<Access> {
     if (fivecord.running()) {
         try {
             const a = await fivecord.call('access', [], staff);
-            access = { tier: a.tier, tierName: a.tierName, tiers: a.tiers, needs: a.needs, via: 'fivecord' };
+            const needs = { ...a.needs };
+            const index = indexIn(a.tiers);
+            for (const key of ['logs']) needs[key] ??= index(config.permissions[key] ?? defaults[key]);
+            access = { tier: a.tier, tierName: a.tierName, tiers: a.tiers, needs, via: 'fivecord' };
         } catch {
             access = local(staff.id);
         }
