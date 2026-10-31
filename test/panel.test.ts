@@ -1,4 +1,4 @@
-import { aces, addPlayer, commands, consoleListeners, dropped, fire, net, players, states, wardenUnbanned } from './env';
+import { aces, addPlayer, clipFile, commands, consoleListeners, dropped, fire, net, players, states, wardenUnbanned } from './env';
 import assert from 'node:assert/strict';
 import type { AddressInfo } from 'node:net';
 import { after, before, describe, test } from 'node:test';
@@ -227,6 +227,40 @@ describe('http', () => {
         assert.deepEqual(asked.map((a) => a[0]), ['list', 'preview', 'update', 'undo', 'preview']);
         assert.equal((await call('/api/me', owner)).json.features.fiveupdate, true);
         states.fiveupdate = 'missing';
+    });
+
+    test('fivecapture: screenshots, clips, and who can watch them', async () => {
+        states.fivecapture = 'started';
+        addPlayer(41, 'Rec');
+        const me = (await call('/api/me', owner)).json;
+        assert.deepEqual([me.features.capture, me.features.screenshots], [true, true]);
+
+        const shot = await call('/api/player/%4041/screenshot', owner, 'POST', { args: [] });
+        assert.equal(shot.json.image, 'data:image/jpeg;base64,/9j/CAP', 'screenshot through fivecapture');
+
+        assert.equal((await call('/api/player/%4041/record', support, 'POST', { args: [10] })).status, 403, 'mod and up');
+        const rec = await call('/api/player/%4041/record', owner, 'POST', { args: [99] });
+        assert.match(rec.json.text, /^30s of Rec/, 'capped at 30 seconds');
+        assert.match(rec.json.clip, /^[0-9a-f]{24}$/);
+
+        const full = await call(`/clip/${rec.json.clip}`, owner);
+        assert.deepEqual([full.status, full.res.headers.get('content-type'), full.text], [200, 'video/webm', '0123456789abcdefghij']);
+        const part = await call(`/clip/${rec.json.clip}`, owner, 'GET', undefined, { Range: 'bytes=5-9' });
+        assert.deepEqual([part.status, part.res.headers.get('content-range'), part.text], [206, 'bytes 5-9/20', '56789']);
+        const tail = await call(`/clip/${rec.json.clip}`, owner, 'GET', undefined, { Range: 'bytes=-4' });
+        assert.equal(tail.text, 'ghij');
+        assert.equal((await call(`/clip/${rec.json.clip}`, owner, 'GET', undefined, { Range: 'bytes=50-' })).status, 416);
+        assert.equal((await call(`/clip/${rec.json.clip}`, support)).status, 404, 'support can not watch staff recordings');
+        assert.equal((await call(`/clip/${rec.json.clip}`)).status, 404, 'not logged in');
+        assert.equal((await call(`/clip/${'0'.repeat(24)}`, owner)).status, 404);
+
+        fire('warden:punished', undefined, 41, 'ban', 'noclip', 'flew', 'Rec', 'license:rec', undefined, clipFile);
+        const d = (await call('/api/detections', support)).json[0];
+        assert.match(d.clip, /^[0-9a-f]{24}$/, 'warden clip on the detection');
+        assert.equal((await call(`/clip/${d.clip}`, support)).status, 200, 'anyone who sees bans sees anticheat clips');
+
+        states.fivecapture = 'missing';
+        assert.equal((await call('/api/player/%4041/record', owner, 'POST', { args: [] })).json.error, 'Video clips need fivecapture running on the server.');
     });
 
     test('in-game staff activity shows up', async () => {

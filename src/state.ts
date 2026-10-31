@@ -1,6 +1,8 @@
 // Things the panel keeps track of itself: console output, server timing,
 // player count history, joins and leaves, anticheat detections and staff actions.
 
+import { randomBytes } from 'node:crypto';
+
 const started = Date.now();
 
 function ring<T>(size: number) {
@@ -103,8 +105,23 @@ export interface Detection {
     detail?: string;
     action: string;
     image?: string;
+    clip?: string; // id of a video, see clips below
     dismissed?: boolean;
 }
+
+// Videos fivecapture saved, served at /clip/<id> to staff with `key`.
+export interface Clip {
+    file: string;
+    key: string;
+}
+const clipList = new Map<string, Clip>();
+export function addClip(file: string, key: string) {
+    const id = randomBytes(12).toString('hex');
+    clipList.set(id, { file, key });
+    if (clipList.size > 300) clipList.delete(clipList.keys().next().value!);
+    return id;
+}
+export const clip = (id: string) => clipList.get(id);
 
 let nextDetection = 1;
 export const detections = ring<Detection>(300);
@@ -116,8 +133,9 @@ on('warden:detected', (src: number, kind: string, detail: string | undefined, ac
     publish('detection', { ...d, image: undefined });
 });
 
-on('warden:punished', (src: number, action: string, kind: string, detail: string | undefined, name: string, license: string | undefined, image?: string) => {
+on('warden:punished', (src: number, action: string, kind: string, detail: string | undefined, name: string, license: string | undefined, image?: string, video?: string) => {
     const d: Detection = { id: nextDetection++, at: Date.now(), src, name, license, kind, detail, action, image };
+    if (typeof video === 'string' && video) d.clip = addClip(video, 'bans');
     detections.push(d);
     publish('detection', { ...d, image: undefined, hasImage: Boolean(image) });
 });

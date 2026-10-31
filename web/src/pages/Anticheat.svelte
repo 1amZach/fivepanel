@@ -12,6 +12,7 @@
     let action = $state('');
     let showDismissed = $state(false);
     let image = $state<{ id: number; src: string } | null>(null);
+    let video = $state<string | null>(null);
 
     onMount(() => {
         api('/api/detections').then((d) => (items = d)).catch(() => {});
@@ -77,6 +78,7 @@
                     <td><span class="badge {color(d.action)}">{d.action}</span></td>
                     <td class="right row">
                         {#if d.hasImage}<button class="btn small" onclick={() => view(d)}>Screenshot</button>{/if}
+                        {#if d.clip}<button class="btn small" onclick={() => (video = `/clip/${d.clip}`)}>Clip</button>{/if}
                         {#if d.action !== 'ban' && has('fivecord') && can('ban')}<button class="btn small danger" onclick={() => ban(d)}>Ban</button>{/if}
                         {#if d.action === 'log' && !d.dismissed}<button class="btn small ghost" onclick={() => dismiss(d)}>Dismiss</button>{/if}
                         {#if d.action === 'log'}<button class="btn small ghost" onclick={() => go('player', `@${d.src}`)}>Profile</button>{/if}
@@ -95,11 +97,19 @@
     </div>
 {/if}
 
+{#if video}
+    <div class="backdrop" role="presentation" onclick={(e) => e.target === e.currentTarget && (video = null)}>
+        <!-- svelte-ignore a11y_media_has_caption -->
+        <video src={video} controls autoplay muted></video>
+    </div>
+{/if}
+
 <style>
     select { width: auto; }
     label input { width: auto; }
     .right { justify-content: flex-end; flex-wrap: nowrap; }
     tr.dim td { opacity: 0.45; }
     .backdrop { position: fixed; inset: 0; z-index: 50; background: rgb(5 4 12 / 0.85); display: grid; place-items: center; padding: 24px; cursor: zoom-out; }
-    .backdrop img { max-width: 100%; max-height: 100%; border-radius: 10px; }
+    .backdrop img, .backdrop video { max-width: 100%; max-height: 100%; border-radius: 10px; }
+    .backdrop video { cursor: default; background: #000; }
 </style>

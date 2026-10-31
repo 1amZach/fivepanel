@@ -10,10 +10,10 @@ It runs inside your server as a normal resource, so there's nothing else to host
 
 - **Dashboard:** players online, server tick time, uptime, a player count chart, joins and leaves, recent detections and what staff have done, here or in game with [fiveadmin](https://github.com/1amZach/fiveadmin).
 - **Players:** everyone online with ping and playtime, plus a search across everyone who has ever joined.
-- **Player profile:** account, playtime, character, job, money, vehicles, warnings, staff notes, ban history, identifiers and recent activity. From here you can message, warn, revive, heal, teleport, freeze, screenshot, kill, kick or ban them.
+- **Player profile:** account, playtime, character, job, money, vehicles, warnings, staff notes, ban history, identifiers and recent activity. From here you can message, warn, revive, heal, teleport, freeze, screenshot, record a short clip, kill, kick or ban them.
 - **Live map:** every player's position, updated every 2 seconds. Scroll to zoom, drag to move, click a dot to open the player.
 - **Bans:** search, see who banned whom and why, lift a ban.
-- **Anticheat:** warden's detections as they happen, with screenshots for kicks and bans, and a one-click ban or dismiss.
+- **Anticheat:** warden's detections as they happen, with screenshots and video clips for kicks and bans, and a one-click ban or dismiss.
 - **Logs:** kills, damage, chat, money, items, spawned vehicles and joins from fivelog. Filter by kind, day, text or player. New lines show up as they happen.
 - **Reports:** in-game `/report`s as a chat. Claim, reply (it shows in the player's chat) and close.
 - **Console:** the live server console, and a box to run commands.
@@ -34,7 +34,7 @@ It runs inside your server as a normal resource, so there's nothing else to host
 | Reports, server lock, scheduled restarts | | yes | |
 | Weather, time, announcements | yes | | |
 
-The Logs page and players' recent activity need fivelog. Updates on the Resources page need fiveupdate.
+The Logs page and players' recent activity need fivelog. Updates on the Resources page need fiveupdate. Screenshots need fivecapture or screenshot-basic, and video clips need fivecapture.
 
 ![Updating a resource](docs/update.png)
 
@@ -81,7 +81,7 @@ add_principal identifier.discord:123456789012345678 group.admin
 add_ace group.admin fivepanel.admin allow
 ```
 
-What each level can do follows the same defaults as fivecord. The Logs page is mod and up by default; change it with `"logs"` in `permissions`. Anyone who can see Resources sees which updates are out, but running them is owner only, since it writes files on the server; change it with `"resource update"`. Change them with `permissions` in `config.json`, using the same names fivecord uses (`"kick": "admin"`, `"server restart": "owner"`).
+What each level can do follows the same defaults as fivecord. The Logs page is mod and up by default; change it with `"logs"` in `permissions`. Anyone who can see Resources sees which updates are out, but running them is owner only, since it writes files on the server; change it with `"resource update"`. Recording clips is mod and up (`"record"`), and warden's clips can be watched by anyone who can see bans. Change them with `permissions` in `config.json`, using the same names fivecord uses (`"kick": "admin"`, `"server restart": "owner"`).
 
 ### HTTPS
 

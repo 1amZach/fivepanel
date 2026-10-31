@@ -27,7 +27,8 @@ const need = (c: Ctx, key: string) => {
 };
 
 const wardenRunning = () => GetResourceState('warden') === 'started';
-const screenshots = () => GetResourceState('screenshot-basic') === 'started';
+const capture = () => GetResourceState('fivecapture') === 'started';
+const screenshots = () => capture() || GetResourceState('screenshot-basic') === 'started';
 const label = (s: Staff) => s.name;
 
 function localPlayers() {
@@ -50,10 +51,24 @@ function localPlayers() {
 function screenshot(src: number): Promise<string> {
     return new Promise((resolve, reject) => {
         const timer = setTimeout(() => reject(new Refused('No screenshot came back in time.')), 20_000);
-        cfx()['screenshot-basic'].requestClientScreenshot(src, { encoding: 'jpg', quality: 0.85 }, (err: unknown, data: string) => {
+        const done = (err: unknown, data: unknown) => {
             clearTimeout(timer);
-            if (err || typeof data !== 'string') reject(new Refused(`Screenshot failed: ${String(err ?? 'no data')}`));
+            if (err || typeof data !== 'string') reject(new Refused(`Screenshot failed: ${String(err || 'no data')}`));
             else resolve(data);
+        };
+        if (capture()) cfx().fivecapture.screenshot(src, { encoding: 'jpg', quality: 0.85 }, (err: unknown, r: any) => done(err, r?.data));
+        else cfx()['screenshot-basic'].requestClientScreenshot(src, { encoding: 'jpg', quality: 0.85 }, done);
+    });
+}
+
+// A clip of the player's screen. Resolves with the saved file.
+function record(src: number, seconds: number): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Refused('No clip came back in time.')), (seconds + 40) * 1000);
+        cfx().fivecapture.record(src, seconds, { save: true }, (err: unknown, r: any) => {
+            clearTimeout(timer);
+            if (err || !r?.file) reject(new Refused(`Recording failed: ${String(err || 'no file')}`));
+            else resolve(r.file);
         });
     });
 }
@@ -63,7 +78,7 @@ function screenshot(src: number): Promise<string> {
 route('GET', '/api/me', undefined, (c) => ({
     staff: c.staff,
     access: c.access,
-    features: { fivecord: fivecord.running(), warden: wardenRunning(), screenshots: screenshots(), fivelog: fivelog.running(), fiveupdate: fiveupdate.running() },
+    features: { fivecord: fivecord.running(), warden: wardenRunning(), screenshots: screenshots(), capture: capture(), fivelog: fivelog.running(), fiveupdate: fiveupdate.running() },
     map: config.map,
 }));
 
@@ -103,6 +118,20 @@ route('POST', '/api/player/:ref/:action', undefined, async (c) => {
     const action = c.params[1]!;
     const args: unknown[] = Array.isArray(c.body?.args) ? c.body.args : [];
 
+    // done here either way, fivecord's API has no video
+    if (action === 'record') {
+        need(c, 'record');
+        if (!capture()) throw new Refused('Video clips need fivecapture running on the server.');
+        const src = Number(ref.replace(/^@/, ''));
+        const name = GetPlayerName(src);
+        if (!ref.startsWith('@') || !name) throw new Refused('That player is not online.');
+        const seconds = Math.min(Math.max(Number(args[0]) || 10, 3), 30);
+        const file = await record(src, seconds);
+        state.did(label(c.staff), `recorded ${seconds}s of ${name}`);
+        fivecord.log('staff', 'Clip from the panel', `**${label(c.staff)}** recorded ${seconds}s of **${name}**`);
+        return { text: `${seconds}s of ${name}.`, clip: state.addClip(file, 'record') };
+    }
+
     if (fivecord.running()) {
         const r = await fivecord.call('act', [action, ref, ...args], c.staff);
         state.did(label(c.staff), `${action} ${ref}: ${r.text}`);
@@ -126,7 +155,7 @@ route('POST', '/api/player/:ref/:action', undefined, async (c) => {
         state.did(label(c.staff), `messaged ${name}`);
         return { text: `Sent to ${name}.` };
     }
-    if (!screenshots()) throw new Refused('Screenshots need the screenshot-basic resource.');
+    if (!screenshots()) throw new Refused('Screenshots need fivecapture or screenshot-basic running on the server.');
     const image = await screenshot(src);
     state.did(label(c.staff), `took a screenshot of ${name}`);
     return { text: `Screenshot of ${name}.`, image };

@@ -13,6 +13,8 @@
     let p = $state<any>(null);
     let error = $state('');
     let shot = $state<string | null>(null);
+    let clip = $state<string | null>(null);
+    let recording = $state(false);
     let busy = $state(false);
 
     async function load() {
@@ -42,8 +44,15 @@
         const r: any = await act(`/api/player/${enc(target)}/${action}`, { args });
         busy = false;
         if (r?.image) shot = r.image;
+        if (r?.clip) clip = `/clip/${r.clip}`;
         if (r) load();
         return r;
+    }
+
+    async function record() {
+        recording = true;
+        await run('record', [10]);
+        recording = false;
     }
 
     async function withReason(action: string, title: string, confirm: string, danger = false) {
@@ -126,6 +135,7 @@
             {#if online && full && can('teleport')}<button class="btn" disabled={busy} onclick={teleport}>Teleport</button>{/if}
             {#if online && full && can('freeze')}<button class="btn" disabled={busy} onclick={() => run('freeze', [!p.online.frozen])}>{p.online.frozen ? 'Unfreeze' : 'Freeze'}</button>{/if}
             {#if online && can('screenshot') && has('screenshots')}<button class="btn" disabled={busy} onclick={() => run('screenshot')}>Screenshot</button>{/if}
+            {#if online && can('record') && has('capture')}<button class="btn" disabled={busy} onclick={record}>{recording ? 'Recording…' : 'Record 10s'}</button>{/if}
             {#if online && full && can('kill')}<button class="btn danger" disabled={busy} onclick={() => run('kill')}>Kill</button>{/if}
             {#if online && can('kick')}<button class="btn danger" disabled={busy} onclick={() => withReason('kick', `Kick ${p.name}`, 'Kick', true)}>Kick</button>{/if}
             {#if full && can('ban')}<button class="btn danger" disabled={busy} onclick={ban}>Ban</button>{/if}
@@ -136,6 +146,14 @@
         <div class="card shot">
             <h2>Screenshot <button class="btn small ghost" onclick={() => (shot = null)}>Close</button></h2>
             <img src={shot} alt="What {p.name} sees" />
+        </div>
+    {/if}
+
+    {#if clip}
+        <div class="card shot">
+            <h2>Clip <span class="row"><a class="btn small ghost" href={clip} download>Download</a><button class="btn small ghost" onclick={() => (clip = null)}>Close</button></span></h2>
+            <!-- svelte-ignore a11y_media_has_caption -->
+            <video src={clip} controls autoplay muted></video>
         </div>
     {/if}
 
@@ -251,7 +269,7 @@
     .actions { justify-content: flex-end; }
     .cols { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); margin-top: 16px; }
     .notice { margin-top: 16px; }
-    .shot img { width: 100%; border-radius: 8px; display: block; }
+    .shot img, .shot video { width: 100%; border-radius: 8px; display: block; background: #000; }
     .shot { margin-bottom: 16px; }
     .ids { margin-top: 16px; }
     .timeline { margin-top: 16px; }

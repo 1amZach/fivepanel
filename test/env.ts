@@ -19,6 +19,9 @@ export const dropped: { src: number; reason: string }[] = [];
 export const net: { event: string; target: unknown; args: unknown[] }[] = [];
 export const states: Record<string, string> = { fivepanel: 'started', fivecord: 'missing', warden: 'missing', 'screenshot-basic': 'missing' };
 export const aces = new Set<string>();
+// a stand-in video for fivecapture's clips
+export const clipFile = join(root, 'clip.webm');
+writeFileSync(clipFile, Buffer.from('0123456789abcdefghij'));
 export const players = new Map<number, { name: string; ids: string[]; pos: number[] }>();
 export const consoleListeners: ((channel: string, message: string) => void)[] = [];
 
@@ -72,6 +75,12 @@ g.exports = new Proxy(() => {}, {
     get: (_t, res: string) => {
         if (res === 'warden') return { getBans: () => wardenBans, unban: (id: number, by: string) => (wardenUnbanned.push([id, by]), id === 3) };
         if (res === 'fivecord') return { log: () => {} };
+        if (res === 'fivecapture') {
+            return {
+                screenshot: (_src: number, _o: unknown, cb: (e: unknown, r: unknown) => void) => cb(false, { data: 'data:image/jpeg;base64,/9j/CAP' }),
+                record: (src: number, seconds: number, _o: unknown, cb: (e: unknown, r: unknown) => void) => cb(false, { file: clipFile, seconds, src }),
+            };
+        }
         return undefined;
     },
 });

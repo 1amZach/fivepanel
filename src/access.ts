@@ -12,7 +12,7 @@ const defaults: Record<string, string | null> = {
     teleport: 'mod', kill: 'admin', message: 'support', warn: 'support',
     'warnings view': 'support', 'warnings remove': 'mod', 'warnings clear': 'admin',
     'note add': 'support', 'note remove': 'support',
-    kick: 'mod', freeze: 'mod', screenshot: 'mod', ban: 'mod', unban: 'mod', bans: 'support',
+    kick: 'mod', freeze: 'mod', screenshot: 'mod', record: 'mod', ban: 'mod', unban: 'mod', bans: 'support',
     'server status': 'support', 'server lock': 'admin', 'server unlock': 'admin', 'server kickall': 'admin',
     'server restart': 'admin', 'server cancelrestart': 'admin', 'server weather': 'mod', 'server time': 'mod',
     announce: 'mod',
@@ -69,7 +69,7 @@ export async function of(staff: Staff): Promise<Access> {
             const a = await fivecord.call('access', [], staff);
             const needs = { ...a.needs };
             const index = indexIn(a.tiers);
-            for (const key of ['logs', 'resource update']) needs[key] ??= index(config.permissions[key] ?? defaults[key]);
+            for (const key of ['logs', 'resource update', 'record']) needs[key] ??= index(config.permissions[key] ?? defaults[key]);
             access = { tier: a.tier, tierName: a.tierName, tiers: a.tiers, needs, via: 'fivecord' };
         } catch {
             access = local(staff.id);

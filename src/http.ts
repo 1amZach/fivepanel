@@ -1,10 +1,12 @@
 import { createReadStream, existsSync, statSync } from 'node:fs';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { extname, join, normalize, sep } from 'node:path';
+import { can, of } from './access';
 import { Denied, dispatch } from './api';
 import { finish, login, logout, staffOf } from './auth';
 import { config, resource } from './config';
 import { Refused } from './fivecord';
+import { clip } from './state';
 
 const types: Record<string, string> = {
     '.html': 'text/html; charset=utf-8',
@@ -31,6 +33,25 @@ const security = {
 function json(res: ServerResponse, status: number, body: unknown) {
     res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', ...security });
     res.end(JSON.stringify(body ?? null));
+}
+
+// With Range support, so the player can seek.
+function sendVideo(req: IncomingMessage, res: ServerResponse, file: string) {
+    const size = statSync(file).size;
+    const headers = { 'Content-Type': 'video/webm', 'Accept-Ranges': 'bytes', 'Cache-Control': 'private, max-age=3600', ...security };
+    const m = req.headers.range?.match(/^bytes=(\d*)-(\d*)$/);
+    if (!m || (!m[1] && !m[2])) {
+        res.writeHead(200, { ...headers, 'Content-Length': String(size) });
+        return createReadStream(file).pipe(res);
+    }
+    const start = m[1] ? Number(m[1]) : Math.max(0, size - Number(m[2]));
+    const end = m[1] && m[2] ? Math.min(Number(m[2]), size - 1) : size - 1;
+    if (start > end || start >= size) {
+        res.writeHead(416, { 'Content-Range': `bytes */${size}` });
+        return res.end();
+    }
+    res.writeHead(206, { ...headers, 'Content-Range': `bytes ${start}-${end}/${size}`, 'Content-Length': String(end - start + 1) });
+    createReadStream(file, { start, end }).pipe(res);
 }
 
 function readBody(req: IncomingMessage): Promise<unknown> {
@@ -96,6 +117,15 @@ export function makeServer(root = webRoot()) {
             }
 
             if (req.method !== 'GET') return json(res, 405, { error: 'Method not allowed.' });
+
+            // a video clip from fivecapture, for staff allowed to see it
+            const clipId = url.pathname.match(/^\/clip\/([0-9a-f]{24})$/)?.[1];
+            if (clipId) {
+                const staff = staffOf(req);
+                const c = clip(clipId);
+                if (!staff || !c || !can(await of(staff), c.key) || !existsSync(c.file)) return json(res, 404, { error: 'No such clip.' });
+                return sendVideo(req, res, c.file);
+            }
 
             // an optional map picture the server owner put next to the resource
             if (url.pathname === '/map-image') {
