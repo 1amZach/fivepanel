@@ -37,7 +37,7 @@ export const labels: Record<string, string> = {
     blockedWeapon: 'Blocked weapon', health: 'Health', armour: 'Armour', invincible: 'Invincible',
     teleport: 'Teleport', speed: 'Speed', heartbeat: 'Heartbeat', injection: 'Injection',
     godmode: 'Godmode', damageModifier: 'Damage boost', spectate: 'Spectate', invisible: 'Invisible',
-    noclip: 'Noclip', superJump: 'Super jump', freecam: 'Freecam', vision: 'Vision', blockedCommand: 'Menu command',
+    noclip: 'Noclip', superJump: 'Super jump', freecam: 'Freecam', vision: 'Vision', blockedCommand: 'Menu command', exploit: 'Script exploit',
 };
 
 export const logKinds: Record<string, { label: string; color: string }> = {
