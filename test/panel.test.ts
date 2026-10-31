@@ -182,6 +182,12 @@ describe('http', () => {
         assert.equal((await call('/api/server/lock', owner, 'POST', { args: [] })).status, 400);
     });
 
+    test('in-game staff activity shows up', async () => {
+        fire('fivepanel:activity', undefined, 'Kira (in game)', 'brought Pat to them');
+        const list = (await call('/api/activity', owner)).json;
+        assert.deepEqual([list[0].staff, list[0].text], ['Kira (in game)', 'brought Pat to them']);
+    });
+
     test('static files, with no way out of the web folder', async () => {
         const index = await call('/');
         assert.match(index.text, /<title>fivepanel/);

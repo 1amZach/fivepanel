@@ -31,7 +31,7 @@ export function call<T = any>(action: string, args: unknown[], staff: Staff): Pr
             reject(new Refused('fivecord took too long to answer.'));
         }, 20_000);
         pending.set(id, { resolve, reject, timer });
-        emit('fivecord:api', id, action, args, { id: staff.id, name: staff.name, avatar: staff.avatar });
+        emit('fivecord:api', id, action, args, { id: staff.id, name: `${staff.name} (panel)`, avatar: staff.avatar });
     });
 }
 

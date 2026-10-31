@@ -8,7 +8,7 @@ It runs inside your server as a normal resource, so there's nothing else to host
 
 ## Pages
 
-- **Dashboard:** players online, server tick time, uptime, a player count chart, joins and leaves, recent detections and what staff have done.
+- **Dashboard:** players online, server tick time, uptime, a player count chart, joins and leaves, recent detections and what staff have done, here or in game with [fiveadmin](https://github.com/1amZach/fiveadmin).
 - **Players:** everyone online with ping and playtime, plus a search across everyone who has ever joined.
 - **Player profile:** account, playtime, character, job, money, vehicles, warnings, staff notes, ban history and identifiers. From here you can message, warn, revive, heal, teleport, freeze, screenshot, kill, kick or ban them.
 - **Live map:** every player's position, updated every 2 seconds. Scroll to zoom, drag to move, click a dot to open the player.

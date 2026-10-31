@@ -132,6 +132,9 @@ export interface Activity {
 
 export const activity = ring<Activity>(200);
 
+// other resources, like fiveadmin, report what staff did in game
+on('fivepanel:activity', (staff: string, text: string) => did(String(staff), String(text)));
+
 export function did(staff: string, text: string) {
     const a = { at: Date.now(), staff, text };
     activity.push(a);
